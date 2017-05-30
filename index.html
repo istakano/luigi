@@ -1,1 +1,132 @@
-Hello world
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Document</title>
+
+
+<style>
+html, body { margin: 0; }
+canvas { width: 100%; height: 100% }
+</style>
+
+</head>
+<body>
+
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+
+<script>
+
+var _table;
+
+//CSVファイルを読み込む関数getCSV()の定義
+function getCSV(){
+    var req = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成
+    req.open("get", "data.csv", true); // アクセスするファイルを指定
+    req.send(null); // HTTPリクエストの発行
+	
+    // レスポンスが返ってきたらconvertCSVtoArray()を呼ぶ	
+    req.onload = function(){
+	convertCSVtoArray(req.responseText); // 渡されるのは読み込んだCSVデータ
+    }
+}
+ 
+// 読み込んだCSVデータを二次元配列に変換する関数convertCSVtoArray()の定義
+function convertCSVtoArray(str){ // 読み込んだCSVデータが文字列として渡される
+    var result = []; // 最終的な二次元配列を入れるための配列
+    var tmp = str.split("\n"); // 改行を区切り文字として行を要素とした配列を生成
+    var arr = [];
+  
+    // 各行ごとにカンマで区切った文字列を要素とした二次元配列を生成
+    for(var i=0;i<tmp.length;++i){
+        arr = tmp[i].split(',');
+      
+        if(arr.length>1){
+          result[i] = arr;
+        }
+    }
+ 
+    _table = result;
+
+    console.log( _table );
+  
+  _3d();
+}
+ 
+getCSV(); //最初に実行される
+  
+  
+function _3d(){
+  
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+  var renderer = new THREE.WebGLRenderer();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  document.body.appendChild( renderer.domElement );
+
+  // マウス制御
+  var controls = new THREE.OrbitControls(camera);
+
+
+  // ライトを当てる
+  var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+  directionalLight.position.set( 0, 1, 1 );
+  scene.add( directionalLight );
+
+  
+  // 星を配置
+  var arr;
+  var star;
+  var scale = 1;
+  var len = _table.length;
+  for( var i=0;i<len;i++){
+    arr = _table[i];
+
+    
+    star = _createStar(i);
+    star.position.set(arr[0]*scale, arr[1]*scale, arr[2]*scale);
+    scene.add( star );
+
+  }
+
+  
+  
+  
+  camera.position.z = 50;
+
+  var render = function () {
+      requestAnimationFrame( render );
+
+//      cube.rotation.x += 0.1;
+//      cube.rotation.y += 0.1;
+
+    
+      controls.update();
+    
+      renderer.render(scene, camera);
+  };
+
+  render();
+}
+  
+  
+  function _createStar(id){
+    
+    // cat
+    var rgb = 0x00ff00;
+    if( id>26 ){
+      // dog
+      rgb = 0xff0000;
+    }
+    
+    var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    var material = new THREE.MeshLambertMaterial( { color: rgb } );
+    var mesh = new THREE.Mesh( geometry, material );
+    return mesh
+  }
+  
+</script>
+</body>
+</html>
